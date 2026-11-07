@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boarding House Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    --navy: #1e1b4b;
+    --primary: #4338ca;
+    --primary-hover: #3730a3;
+    --primary-soft: #eef2ff;
+    --bg: #f4f5f9;
+    --surface: #ffffff;
+    --border: #e5e7ef;
+    --text: #111827;
+    --muted: #6b7280;
+    --green: #16a34a;  --green-hover: #15803d;  --green-soft: #dcfce7;
+    --red: #dc2626;    --red-hover: #b91c1c;    --red-soft: #fee2e2;
+    --amber-soft: #fef3c7; --amber: #b45309;
+    --sky-soft: #e0f2fe;   --sky: #0369a1;
+    --violet-soft: #ede9fe; --violet: #6d28d9;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 1px 2px rgba(17, 24, 39, .05), 0 4px 14px rgba(17, 24, 39, .05);
+    --shadow-lg: 0 20px 50px rgba(17, 24, 39, .25);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 14px; line-height: 1.5;
+  }
+  button, input, select { font-family: inherit; font-size: inherit; }
+  svg { display: block; }
+
+  /* ---------- Header ---------- */
+  .topbar { background: var(--navy); color: #fff; }
+  .topbar-inner {
+    max-width: 1180px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 10px; flex: none;
+    background: rgba(255, 255, 255, .12); display: grid; place-items: center;
+  }
+  .brand-logo svg { width: 22px; height: 22px; }
+  .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand p { margin: 0; font-size: 12px; color: #c7d2fe; }
+  .today { font-size: 13px; color: #c7d2fe; white-space: nowrap; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+
+  /* ---------- Stat cards ---------- */
+  .stats {
+    display: grid; gap: 16px; margin-bottom: 24px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; min-height: 112px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 14px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(17, 24, 39, .09); }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card-label { font-size: 12px; font-weight: 500; color: var(--muted); line-height: 1.3; }
+  .card-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .card-icon svg { width: 18px; height: 18px; }
+  .card-value { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; overflow-wrap: anywhere; }
+  .tone-indigo { background: var(--primary-soft); color: var(--primary); }
+  .tone-green  { background: var(--green-soft);   color: var(--green); }
+  .tone-amber  { background: var(--amber-soft);   color: var(--amber); }
+  .tone-sky    { background: var(--sky-soft);     color: var(--sky); }
+  .tone-violet { background: var(--violet-soft);  color: var(--violet); }
+  .tone-red    { background: var(--red-soft);     color: var(--red); }
+
+  /* ---------- Panel / tabs / toolbar ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .panel-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg); border-radius: 12px; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; cursor: pointer;
+    padding: 8px 16px; border-radius: 9px; font-weight: 600; color: var(--muted);
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+  .tab svg { width: 16px; height: 16px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 3px rgba(17, 24, 39, .12); }
+  .tab .count { font-size: 11px; font-weight: 600; background: var(--border); color: var(--muted); padding: 1px 7px; border-radius: 99px; }
+  .tab.active .count { background: var(--primary-soft); color: var(--primary); }
+
+  .tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+  .search input {
+    height: 40px; width: 220px; padding: 0 12px 0 34px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius-sm); cursor: pointer;
+    font-weight: 600; color: #fff; background: var(--primary); white-space: nowrap;
+    transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+  }
+  .btn svg { width: 16px; height: 16px; }
+  .btn:hover { background: var(--primary-hover); box-shadow: 0 4px 12px rgba(67, 56, 202, .3); }
+  .btn:active { transform: translateY(1px); }
+  .btn.edit { background: var(--green); }
+  .btn.edit:hover { background: var(--green-hover); box-shadow: 0 4px 12px rgba(22, 163, 74, .3); }
+  .btn.del { background: var(--red); }
+  .btn.del:hover { background: var(--red-hover); box-shadow: 0 4px 12px rgba(220, 38, 38, .3); }
+  .btn.gray { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn.gray:hover { background: var(--bg); box-shadow: none; }
+  .btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .btn:disabled { opacity: .6; cursor: not-allowed; }
+
+  :focus-visible { outline: 3px solid rgba(67, 56, 202, .35); outline-offset: 2px; }
+  .search input:focus, .field input:focus, .field select:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 56, 202, .15);
+  }
+
+  /* ---------- Table ---------- */
+  .table-wrap { width: 100%; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 12px 20px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted); background: #fafbfd; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody td { padding: 14px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
+  tbody tr { transition: background .12s ease; }
+  tbody tr:hover { background: #f8f9ff; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .actions { text-align: right; white-space: nowrap; width: 1%; }
+  .actions .btn + .btn { margin-left: 6px; }
+  td.strong { font-weight: 600; }
+  .muted { color: var(--muted); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge.occupied, .badge.paid, .badge.available { background: var(--green-soft); color: #15803d; }
+  .badge.vacant                  { background: var(--amber-soft); color: var(--amber); }
+  .badge.unpaid, .badge.full     { background: var(--red-soft);   color: #b91c1c; }
+  .occ { display: inline-flex; align-items: center; gap: 10px; justify-content: flex-end; }
+  .occ b { font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+  .occ-bar { width: 64px; height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; }
+  .occ-bar i { display: block; height: 100%; border-radius: 99px; background: var(--green); }
+  .occ-bar.full i { background: var(--red); }
+  .hint { font-size: 12px; color: var(--muted); margin: -10px 0 16px; }
+
+  .empty { padding: 56px 20px; text-align: center; color: var(--muted); }
+  .empty svg { width: 40px; height: 40px; margin: 0 auto 10px; color: #c7cbe0; }
+  .empty b { display: block; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    display: none; position: fixed; inset: 0; z-index: 50; padding: 16px;
+    background: rgba(17, 24, 39, .55); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 16px; box-shadow: var(--shadow-lg);
+    width: 440px; max-width: 100%; max-height: calc(100vh - 32px); overflow: hidden;
+    display: flex; flex-direction: column; animation: pop .18s ease;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+  .modal-head h3 { margin: 0; font-size: 17px; font-weight: 700; text-transform: capitalize; }
+  .icon-btn { border: 0; background: transparent; cursor: pointer; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; }
+  .icon-btn:hover { background: var(--bg); color: var(--text); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .modal form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .modal-head, .modal-foot { flex: none; }
+  .modal-body { padding: 20px 22px; overflow-y: auto; min-height: 0; }
+  .field { display: block; margin-bottom: 16px; }
+  .field > span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s;
+  }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid var(--border); background: #fafbfd; border-radius: 0 0 16px 16px; }
+
+  .bill {
+    background: var(--primary-soft); border: 1px solid #c7d2fe; border-radius: var(--radius-sm);
+    padding: 12px 14px; margin: -4px 0 16px; font-size: 13px;
+  }
+  .bill-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .bill-row span:first-child { color: var(--muted); }
+  .bill-row b { font-variant-numeric: tabular-nums; }
+  .bill-total { margin-top: 6px; padding-top: 8px; border-top: 1px dashed #a5b4fc; color: var(--red); font-size: 14px; }
+  .bill-total span:first-child { color: var(--red); font-weight: 600; }
+
+  .confirm { text-align: center; padding: 28px 24px 8px; }
+  .confirm-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--red-soft); color: var(--red); display: grid; place-items: center; margin: 0 auto 14px; }
+  .confirm-icon svg { width: 26px; height: 26px; }
+  .confirm h3 { margin: 0 0 6px; font-size: 18px; }
+  .confirm p { margin: 0 0 8px; color: var(--muted); }
+  .confirm + .modal-foot { justify-content: center; background: transparent; border: 0; padding-bottom: 24px; }
+  .modal.small { width: 400px; }
+
+  /* ---------- Toast ---------- */
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 60;
+    background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 10px; font-weight: 500; box-shadow: var(--shadow-lg);
+    transition: opacity .2s ease, transform .2s ease; max-width: calc(100vw - 32px);
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.error { background: var(--red); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+  @media (max-width: 760px) {
+    .topbar-inner, main { padding-left: 16px; padding-right: 16px; }
+    main { padding-top: 16px; }
+    .today { display: none; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .card { padding: 14px; min-height: 100px; }
+    .card-value { font-size: 20px; }
+    .panel-head { padding: 14px; }
+    .tabs { width: 100%; }
+    .tab { flex: 1; justify-content: center; padding: 8px 6px; }
+    .tab svg { display: none; }
+    .tools { width: 100%; }
+    .search { flex: 1; }
+    .search input { width: 100%; }
+
+    /* table -> stacked cards */
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: 0; }
+    tbody td { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 6px 0; border: 0; text-align: right; }
+    tbody td::before { content: attr(data-label); font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; flex: none; }
+    tbody td.actions { width: 100%; justify-content: flex-end; padding-top: 10px; }
+    tbody td.actions::before { content: none; }
+    .actions .btn { flex: 1; }
+    tbody td.no-label { display: block; text-align: center; }
+    tbody td.no-label::before { content: none; }
+  }
+
+  @media (max-width: 380px) { .stats { gap: 8px; } .card-label { font-size: 11px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+      </div>
+      <div>
+        <h1>Boarding House Management</h1>
+        <p>Rooms · Tenants · Payments</p>
+      </div>
+    </div>
+    <div class="today" id="today"></div>
+  </div>
+</header>
+
+<main>
+  <section class="stats" id="stats" aria-label="Summary"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="tools">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="Search..." aria-label="Search records" oninput="render()">
+        </label>
+        <button class="btn" id="addBtn" onclick="openForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span id="addLabel">Add</span>
+        </button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="table"></table>
+    </div>
+  </section>
+</main>
+
+<!-- Add / Edit modal -->
+<div class="overlay" id="modal" onclick="if(event.target===this)closeForm()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="modal-head">
+      <h3 id="mtitle"></h3>
+      <button type="button" class="icon-btn" onclick="closeForm()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form id="form" onsubmit="save(event)"></form>
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="overlay" id="confirmModal" onclick="if(event.target===this)closeConfirm()">
+  <div class="modal small" role="alertdialog" aria-modal="true" aria-labelledby="ctitle">
+    <div class="confirm">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg>
+      </div>
+      <h3 id="ctitle">Delete this record?</h3>
+      <p id="cmsg">This action cannot be undone.</p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn gray" onclick="closeConfirm()">Cancel</button>
+      <button type="button" class="btn del" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- Config (same fields as before) ---------- */
+const cfg = {
+  rooms: {
+    title: 'Room', add: 'Add Room', icon: 'door',
+    show: [['Room No', 'room_no', 'strong'], ['Occupancy', 'occupants', 'occ'], ['Rate', 'rate', 'money'], ['Status', 'status', 'badge']],
+    fields: [
+      { k: 'room_no', l: 'Room No', t: 'text' },
+      { k: 'capacity', l: 'Capacity (max tenants)', t: 'number' },
+      { k: 'rate', l: 'Monthly Rate (₱)', t: 'number' },
+    ],
+  },
+  tenants: {
+    title: 'Tenant', add: 'Add Tenant', icon: 'users',
+    show: [['Name', 'name', 'strong'], ['Contact', 'contact'], ['Room', 'room_no'], ['Move-in', 'move_in_date', 'date']],
+    fields: [
+      { k: 'name', l: 'Full Name', t: 'text' },
+      { k: 'contact', l: 'Contact No.', t: 'text' },
+      { k: 'room_id', l: 'Room', t: 'select', src: 'rooms', label: 'room_no' },
+      { k: 'move_in_date', l: 'Move-in Date', t: 'date' },
+    ],
+  },
+  payments: {
+    title: 'Payment', add: 'Add Payment', icon: 'card',
+    show: [['Tenant', 'tenant_name', 'strong'], ['Amount', 'amount', 'money'], ['Month', 'month', 'month'], ['Date Paid', 'date_paid', 'date'], ['Status', 'status', 'badge']],
+    fields: [
+      { k: 'tenant_id', l: 'Tenant', t: 'select', src: 'tenants', label: 'name' },
+      { k: 'amount', l: 'Amount (₱)', t: 'number' },
+      { k: 'month', l: 'For Month', t: 'month' },
+      { k: 'date_paid', l: 'Date Paid', t: 'date' },
+      { k: 'status', l: 'Status', t: 'select', opts: ['paid', 'unpaid'] },
+    ],
+  },
+};
+
+/* ---------- Icons ---------- */
+const I = {
+  door: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><circle cx="15" cy="12.5" r=".8" fill="currentColor"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.9.7 3.1 2.3 3.5 5.2"/></svg>',
+  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg>',
+  open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h8"/><path d="M3 21h18"/><path d="M17 4v6M14 7h6"/></svg>',
+  cash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16v.1"/></svg>',
+  inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5.5 5h13L21 13v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>',
+};
+
+/* ---------- State & helpers ---------- */
+let data = { rooms: [], tenants: [], payments: [] };
+let tab = 'rooms', editId = null;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = id => document.getElementById(id);
+const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+const fmtDate = v => { if (!v) return '—'; const d = new Date(v + 'T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+const fmtMonth = v => { if (!v) return '—'; const d = new Date(v + '-01T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); };
+
+let toastTimer;
+function toast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg; t.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 2600);
+}
+
+/* ---------- Load & render ---------- */
+async function load() {
+  for (const k of Object.keys(data)) data[k] = await (await fetch('/api/' + k)).json();
+  const s = await (await fetch('/api/stats')).json();
+  $('stats').innerHTML = [
+    ['Total Rooms', s.totalRooms, 'door', 'indigo'],
+    ['Occupied Rooms', s.occupied, 'check', 'green'],
+    ['Available Rooms', s.available, 'open', 'amber'],
+    ['Total Tenants', s.tenants, 'users', 'sky'],
+    ['Collected This Month', peso(s.collected), 'cash', 'violet'],
+    ['Unpaid Tenants', s.unpaid, 'alert', 'red'],
+  ].map(([l, v, ic, tone]) => `
+    <div class="card">
+      <div class="card-top"><span class="card-label">${l}</span><span class="card-icon tone-${tone}">${I[ic]}</span></div>
+      <div class="card-value">${v}</div>
+    </div>`).join('');
+  render();
+}
+
+function cell(r, [label, key, type]) {
+  const v = r[key];
+  switch (type) {
+    case 'money': return `<td class="num" data-label="${label}">${peso(v)}</td>`;
+    case 'occ': {
+      const cap = Number(r.capacity) > 0 ? Number(r.capacity) : 1, used = r.occupants || 0;
+      const pct = Math.min(100, Math.round(used / cap * 100));
+      return `<td class="num" data-label="${label}"><span class="occ"><span class="occ-bar ${used >= cap ? 'full' : ''}"><i style="width:${pct}%"></i></span><b>${used} / ${cap}</b></span></td>`;
+    }
+    case 'num':   return `<td class="num" data-label="${label}">${esc(v ?? '—')}</td>`;
+    case 'date':  return `<td data-label="${label}">${fmtDate(v)}</td>`;
+    case 'month': return `<td data-label="${label}">${fmtMonth(v)}</td>`;
+    case 'badge': return `<td data-label="${label}"><span class="badge ${esc(v)}">${esc(v ?? '—')}</span></td>`;
+    case 'strong': return `<td class="strong" data-label="${label}">${esc(v ?? '—')}</td>`;
+    default:      return `<td data-label="${label}">${v === null || v === undefined || v === '' ? '<span class="muted">—</span>' : esc(v)}</td>`;
+  }
+}
+
+function render() {
+  $('tabs').innerHTML = Object.keys(cfg).map(k => `
+    <button class="tab ${k === tab ? 'active' : ''}" role="tab" aria-selected="${k === tab}" onclick="switchTab('${k}')">
+      ${I[cfg[k].icon]}<span>${k[0].toUpperCase() + k.slice(1)}</span><span class="count">${data[k].length}</span>
+    </button>`).join('');
+  $('addLabel').textContent = cfg[tab].add;
+
+  const c = cfg[tab];
+  const q = $('search').value.trim().toLowerCase();
+  const list = q ? data[tab].filter(r => c.show.some(x => String(r[x[1]] ?? '').toLowerCase().includes(q))) : data[tab];
+
+  const head = '<thead><tr>' + c.show.map(x => `<th class="${['money', 'num', 'occ'].includes(x[2]) ? 'num' : ''}">${x[0]}</th>`).join('') + '<th class="num">Actions</th></tr></thead>';
+  const rows = list.map(r => '<tr>' + c.show.map(x => cell(r, x)).join('') +
+    `<td class="actions">
+       <button class="btn sm edit" onclick="openForm(${r.id})">${I.edit}Edit</button>
+       <button class="btn sm del" onclick="del(${r.id})">${I.trash}Delete</button>
+     </td></tr>`).join('');
+  const empty = `<tr><td class="no-label" colspan="${c.show.length + 1}"><div class="empty">${I.inbox}<b>${q ? 'No matching results' : 'No records yet'}</b>${q ? 'Try a different search.' : 'Click “' + c.add + '” to create the first one.'}</div></td></tr>`;
+  $('table').innerHTML = head + '<tbody>' + (rows || empty) + '</tbody>';
+}
+
+function switchTab(k) { tab = k; $('search').value = ''; render(); }
+
+/* ---------- Add / Edit form ---------- */
+function openForm(id = null) {
+  editId = id;
+  const row = id ? data[tab].find(r => r.id === id) : {};
+  $('mtitle').textContent = (id ? 'Edit ' : 'Add ') + cfg[tab].title;
+  $('form').innerHTML = '<div class="modal-body">' + cfg[tab].fields.map(f => {
+    let v = row[f.k] ?? '';
+    if (!id && tab === 'payments') {            // new payment: default to today / this month
+      const d = new Date(), p2 = n => String(n).padStart(2, '0');
+      if (f.k === 'date_paid') v = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+      if (f.k === 'month') v = `${d.getFullYear()}-${p2(d.getMonth() + 1)}`;
+    }
+    let input;
+    if (f.t === 'select') {
+      const opts = f.opts
+        ? f.opts.map(o => ({ v: o, l: o }))
+        : [{ v: '', l: '-- none --' }, ...data[f.src]
+            .filter(o => f.src !== 'rooms' || o.id === row.room_id || (o.occupants || 0) < (Number(o.capacity) > 0 ? Number(o.capacity) : 1))
+            .map(o => {
+              if (f.src !== 'rooms') return { v: o.id, l: o[f.label] };
+              const left = (Number(o.capacity) > 0 ? Number(o.capacity) : 1) - (o.occupants || 0);
+              return { v: o.id, l: o.id === row.room_id ? o.room_no + ' (current room)' : `${o.room_no} — ${left} slot${left > 1 ? 's' : ''} left` };
+            })];
+      input = `<select name="${f.k}">` + opts.map(o => `<option value="${esc(o.v)}" ${String(o.v) === String(v) ? 'selected' : ''}>${esc(o.l)}</option>`).join('') + '</select>';
+    } else {
+      const extra = f.t === 'number' ? (f.k === 'capacity' ? 'min="1" step="1"' : 'min="0" step="any"') : '';
+      input = `<input name="${f.k}" type="${f.t}" value="${esc(v)}" ${extra} ${['room_no', 'name', 'capacity'].includes(f.k) ? 'required' : ''}>`;
+    }
+    return `<label class="field"><span>${f.l}</span>${input}</label>` + (f.k === 'tenant_id' ? '<div id="billBox"></div>' : '') +
+      (f.k === 'room_id' ? '<div class="hint">Only rooms with free space are listed. Full rooms are hidden.</div>' : '');
+  }).join('') + '</div>' +
+    `<div class="modal-foot">
+       <button type="button" class="btn gray" onclick="closeForm()">Cancel</button>
+       <button class="btn" type="submit">Save</button>
+     </div>`;
+  $('toast').className = '';
+  $('modal').classList.add('open');
+
+  if (tab === 'payments') {
+    const sel = document.querySelector('#form select[name="tenant_id"]');
+    sel.onchange = showBill;
+    showBill();
+  }
+  const first = document.querySelector('#form input, #form select');
+  if (first) first.focus();
+}
+
+function closeForm() { $('modal').classList.remove('open'); }
+
+/* Bill / balance box shown on the payment form (uses /api/tenants/:id/bill) */
+async function showBill() {
+  const sel = document.querySelector('#form select[name="tenant_id"]');
+  const box = $('billBox');
+  if (!sel || !box) return;
+  if (!sel.value) { box.innerHTML = ''; return; }
+  try {
+    const res = await fetch(`/api/tenants/${sel.value}/bill`);
+    if (!res.ok) throw new Error();
+    const b = await res.json();
+    box.innerHTML = `<div class="bill">
+      <div class="bill-row"><span>Room</span><b>${esc(b.room_no ?? 'No room')}</b></div>
+      <div class="bill-row"><span>Monthly rate</span><b>${peso(b.rate)}</b></div>
+      <div class="bill-row"><span>Total billed (${b.months} mo)</span><b>${peso(b.billed)}</b></div>
+      <div class="bill-row"><span>Total paid</span><b>${peso(b.paid)}</b></div>
+      <div class="bill-row bill-total"><span>Balance</span><b>${peso(b.balance)}</b></div>
+    </div>`;
+    if (!editId) document.querySelector('#form input[name="amount"]').value = b.balance || b.rate;
+  } catch { box.innerHTML = ''; }
+}
+
+async function save(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  const body = Object.fromEntries(new FormData(e.target));
+  const wasEdit = !!editId;
+  try {
+    const res = await fetch(`/api/${tab}` + (editId ? '/' + editId : ''), {
+      method: editId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      let msg = 'Could not save. Please try again.';
+      try { msg = (await res.json()).error || msg; } catch {}
+      throw new Error(msg);
+    }
+    closeForm();
+    await load();
+    toast(cfg[tab].title + (wasEdit ? ' updated' : ' added'));
+  } catch (err) {
+    toast(err.message === 'Failed to fetch' ? 'Could not reach the server.' : err.message, true);
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- Delete with confirmation ---------- */
+function del(id) {
+  const r = data[tab].find(x => x.id === id) || {};
+  const name = r.room_no || r.name || r.tenant_name || '';
+  $('ctitle').textContent = 'Delete this ' + cfg[tab].title.toLowerCase() + '?';
+  $('cmsg').textContent = (name ? `“${name}” will be permanently removed. ` : '') + 'This action cannot be undone.';
+  $('confirmBtn').onclick = async () => {
+    try {
+      const res = await fetch(`/api/${tab}/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      closeConfirm();
+      await load();
+      toast(cfg[tab].title + ' deleted');
+    } catch { closeConfirm(); toast('Could not delete. Please try again.', true); }
+  };
+  $('toast').className = '';
+  $('confirmModal').classList.add('open');
+  $('confirmBtn').focus();
+}
+function closeConfirm() { $('confirmModal').classList.remove('open'); }
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeForm(); closeConfirm(); } });
+$('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+load();
+</script>
+</body>
+</html>
