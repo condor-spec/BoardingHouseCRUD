@@ -3,7 +3,7 @@
 A dashboard application with CRUD functionality for managing rooms, tenants, and payments.
 
 ## Group Members
-- Dwayne Villanueva
+- Dwayne Lloyd Villanueva
 - Joe Kristian Muele
 - Eugene Quilla
 - Rhea Mae Baita
